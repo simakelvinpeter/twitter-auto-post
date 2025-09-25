@@ -62,4 +62,4 @@ cron.schedule('0 8 * * *', () => {
 });
 
 // Optional: run immediately once to test
-//postTweet();
+postTweet();
