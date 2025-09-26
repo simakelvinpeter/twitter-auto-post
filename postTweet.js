@@ -1,7 +1,5 @@
-import 'dotenv/config';
 import { TwitterApi } from 'twitter-api-v2';
 import OpenAI from 'openai';
-import cron from 'node-cron';
 
 // --- Setup OpenAI ---
 const openai = new OpenAI({
@@ -22,9 +20,7 @@ async function generateTweetContent() {
     const prompt = `
     You are a social media content creator. 
     Write a short, engaging tweet about the latest tech trend 
-    that can spark impressions, likes, and comments. 
-    Keep it under 240 characters. 
-    Make it conversational and catchy.
+    under 240 characters. Make it conversational and catchy.
     `;
 
     const response = await openai.chat.completions.create({
@@ -33,7 +29,8 @@ async function generateTweetContent() {
       max_tokens: 80,
     });
 
-    return response.choices[0].message.content.trim();
+    const aiMessage = response.choices[0]?.message?.content || "";
+    return aiMessage.trim();
   } catch (error) {
     console.error("❌ Error generating tweet:", error);
     return "Tech is moving fast! 🚀 What's your take on the latest trends?";
@@ -45,21 +42,11 @@ async function postTweet() {
   try {
     const tweetText = await generateTweetContent();
     const response = await twitterClient.v2.tweet(tweetText);
-
     console.log("✅ Tweet posted successfully:", response.data);
   } catch (error) {
     console.error("❌ Error posting tweet:", error);
   }
 }
 
-// --- Schedule daily tweet at 8:00 AM Cyprus time ---
-// Cyprus time = UTC+3
-cron.schedule('0 8 * * *', () => {
-  console.log("⏰ Running scheduled tweet...");
-  postTweet();
-}, {
-  timezone: "Europe/Nicosia"
-});
-
-// Optional: run immediately once to test
+// --- Run when GitHub Actions triggers ---
 postTweet();
