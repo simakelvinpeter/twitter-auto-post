@@ -11,8 +11,8 @@ const openai = new OpenAI({
 
 
 const twitterClient = new TwitterApi({
-  appKey: process.env.TWITTER_API_KEY,
-  appSecret: process.env.TWITTER_API_SECRET,
+  apiKey: process.env.TWITTER_API_KEY,
+  apiSecret: process.env.TWITTER_API_SECRET,
   accessToken: process.env.TWITTER_ACCESS_TOKEN,
   accessSecret: process.env.TWITTER_ACCESS_SECRET,
 });
@@ -67,6 +67,14 @@ async function generateTweetContent() {
 // --- Function to post Tweet ---
 async function postTweet() {
   try {
+    // Debug log to check if environment variables are set (without revealing their values)
+    console.log("Environment variables check:", {
+      hasApiKey: !!process.env.TWITTER_API_KEY,
+      hasApiSecret: !!process.env.TWITTER_API_SECRET,
+      hasAccessToken: !!process.env.TWITTER_ACCESS_TOKEN,
+      hasAccessSecret: !!process.env.TWITTER_ACCESS_SECRET
+    });
+    
     const tweetText = await generateTweetContent();
     const response = await twitterClient.v2.tweet(tweetText);
     console.log("✅ Tweet posted successfully:", response.data);
