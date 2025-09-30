@@ -2,8 +2,8 @@ name: Daily Tweet Bot
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Run every 30 minutes for testing
-  workflow_dispatch:  # Manual trigger
+    - cron: '0 5 * * *'  # 8:00 AM Cyprus time (UTC+3 => 5:00 UTC)
+  workflow_dispatch:  # Manual trigger (only use this for testing)
 
 jobs:
   tweet:
