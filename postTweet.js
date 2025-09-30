@@ -1,12 +1,15 @@
+import 'dotenv/config';
+import fs from 'fs';
 import { TwitterApi } from 'twitter-api-v2';
 import OpenAI from 'openai';
+import cron from 'node-cron';
 
-// --- Setup OpenAI ---
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// --- Setup Twitter ---
+
 const twitterClient = new TwitterApi({
   appKey: process.env.TWITTER_API_KEY,
   appSecret: process.env.TWITTER_API_SECRET,
@@ -14,26 +17,50 @@ const twitterClient = new TwitterApi({
   accessSecret: process.env.TWITTER_ACCESS_SECRET,
 });
 
-// --- Function to get AI-generated content ---
+// --- Function to get AI-generated content or fallback ---
 async function generateTweetContent() {
   try {
     const prompt = `
     You are a social media content creator. 
     Write a short, engaging tweet about the latest tech trend 
-    under 240 characters. Make it conversational and catchy.
+    that can spark impressions, likes, and comments. 
+    Keep it under 240 characters. 
+    Make it conversational and catchy.
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 80,
     });
 
-    const aiMessage = response.choices[0]?.message?.content || "";
-    return aiMessage.trim();
+    let tweet = response.choices[0].message.content.trim();
+
+    // Optional: add hashtags
+    const hashtags = ['#Tech', '#AI', '#Innovation', '#TechTrends'];
+    tweet += ' ' + hashtags.join(' ');
+
+    return tweet;
+
   } catch (error) {
-    console.error("❌ Error generating tweet:", error);
-    return "Tech is moving fast! 🚀 What's your take on the latest trends?";
+    console.error("❌ Error generating tweet via OpenAI:", error);
+
+    // fallback: pick a random tweet from tweets.txt
+    try {
+      const fallbackTweets = fs.readFileSync('tweets.txt', 'utf-8')
+        .split('\n')
+        .filter(Boolean);
+      let tweet = fallbackTweets[Math.floor(Math.random() * fallbackTweets.length)];
+
+      // Optional: add hashtags
+      const hashtags = ['#Tech', '#AI', '#Innovation', '#TechTrends'];
+      tweet += ' ' + hashtags.join(' ');
+
+      return tweet;
+    } catch (fsError) {
+      console.error("❌ Error reading tweets.txt:", fsError);
+      return "Tech is moving fast! 🚀 Stay tuned for updates!";
+    }
   }
 }
 
@@ -48,5 +75,13 @@ async function postTweet() {
   }
 }
 
-// --- Run when GitHub Actions triggers ---
+// --- Schedule daily tweet at 8:00 AM Cyprus time ---
+cron.schedule('0 8 * * *', () => {
+  console.log("⏰ Running scheduled tweet...");
+  postTweet();
+}, {
+  timezone: "Europe/Nicosia"
+});
+
+// Optional: run immediately once to test
 postTweet();
