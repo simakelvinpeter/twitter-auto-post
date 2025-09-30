@@ -10,11 +10,34 @@ const openai = new OpenAI({
 });
 
 
-const twitterClient = new TwitterApi({
-  apiKey: process.env.TWITTER_API_KEY,
-  apiSecret: process.env.TWITTER_API_SECRET,
-  accessToken: process.env.TWITTER_ACCESS_TOKEN,
-  accessSecret: process.env.TWITTER_ACCESS_SECRET,
+// Create Twitter client with OAuth 1.0a credentials
+// Initialize Twitter client with error handling
+let twitterClient;
+try {
+  if (!process.env.TWITTER_API_KEY || !process.env.TWITTER_API_SECRET || 
+      !process.env.TWITTER_ACCESS_TOKEN || !process.env.TWITTER_ACCESS_SECRET) {
+    throw new Error('Missing Twitter credentials');
+  }
+  
+  twitterClient = new TwitterApi({
+    appKey: process.env.TWITTER_API_KEY,
+    appSecret: process.env.TWITTER_API_SECRET,
+    accessToken: process.env.TWITTER_ACCESS_TOKEN,
+    accessSecret: process.env.TWITTER_ACCESS_SECRET,
+  });
+  
+  console.log('Twitter client initialized successfully');
+} catch (error) {
+  console.error('Error initializing Twitter client:', error.message);
+  process.exit(1);
+}
+
+// Log authentication status
+console.log("Twitter client configuration:", {
+  hasAppKey: !!process.env.TWITTER_API_KEY,
+  hasAppSecret: !!process.env.TWITTER_API_SECRET,
+  hasAccessToken: !!process.env.TWITTER_ACCESS_TOKEN,
+  hasAccessSecret: !!process.env.TWITTER_ACCESS_SECRET,
 });
 
 // --- Function to get AI-generated content or fallback ---
@@ -76,8 +99,11 @@ async function postTweet() {
     });
     
     const tweetText = await generateTweetContent();
+    console.log("Generated tweet text:", tweetText);
+    
     const response = await twitterClient.v2.tweet(tweetText);
     console.log("✅ Tweet posted successfully:", response.data);
+    process.exit(0); // Exit successfully after posting
   } catch (error) {
     console.error("❌ Error posting tweet:", error);
   }

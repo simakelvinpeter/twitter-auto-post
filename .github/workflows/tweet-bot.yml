@@ -8,6 +8,7 @@ on:
 jobs:
   tweet:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Add timeout to prevent hanging
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
