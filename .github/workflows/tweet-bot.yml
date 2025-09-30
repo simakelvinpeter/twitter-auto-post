@@ -33,5 +33,13 @@ jobs:
           node --version
           echo "Checking for required files:"
           ls -la
+          echo "Checking environment variables (securely):"
+          node -e "console.log('Environment check:', {
+            TWITTER_API_KEY: !!process.env.TWITTER_API_KEY,
+            TWITTER_API_SECRET: !!process.env.TWITTER_API_SECRET,
+            TWITTER_ACCESS_TOKEN: !!process.env.TWITTER_ACCESS_TOKEN,
+            TWITTER_ACCESS_SECRET: !!process.env.TWITTER_ACCESS_SECRET,
+            OPENAI_API_KEY: !!process.env.OPENAI_API_KEY
+          })"
           echo "Starting tweet bot..."
           node postTweet.js
