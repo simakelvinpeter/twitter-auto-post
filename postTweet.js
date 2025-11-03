@@ -4,13 +4,10 @@ import { TwitterApi } from 'twitter-api-v2';
 import OpenAI from 'openai';
 import cron from 'node-cron';
 
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-
-// Create Twitter client with OAuth 1.0a credentials
 // Initialize Twitter client with error handling
 let twitterClient;
 try {
@@ -26,19 +23,11 @@ try {
     accessSecret: process.env.TWITTER_ACCESS_SECRET,
   });
   
-  console.log('Twitter client initialized successfully');
+  console.log('✅ Twitter client initialized successfully');
 } catch (error) {
-  console.error('Error initializing Twitter client:', error.message);
+  console.error('❌ Error initializing Twitter client:', error.message);
   process.exit(1);
 }
-
-// Log authentication status
-console.log("Twitter client configuration:", {
-  hasAppKey: !!process.env.TWITTER_API_KEY,
-  hasAppSecret: !!process.env.TWITTER_API_SECRET,
-  hasAccessToken: !!process.env.TWITTER_ACCESS_TOKEN,
-  hasAccessSecret: !!process.env.TWITTER_ACCESS_SECRET,
-});
 
 // --- Function to get AI-generated content or fallback ---
 async function generateTweetContent() {
@@ -82,7 +71,7 @@ async function generateTweetContent() {
       return tweet;
     } catch (fsError) {
       console.error("❌ Error reading tweets.txt:", fsError);
-      return "Tech is moving fast! 🚀 Stay tuned for updates!";
+      return "Tech is moving fast! 🚀 Stay tuned for updates! #Tech #AI";
     }
   }
 }
@@ -90,32 +79,35 @@ async function generateTweetContent() {
 // --- Function to post Tweet ---
 async function postTweet() {
   try {
-    // Debug log to check if environment variables are set (without revealing their values)
-    console.log("Environment variables check:", {
-      hasApiKey: !!process.env.TWITTER_API_KEY,
-      hasApiSecret: !!process.env.TWITTER_API_SECRET,
-      hasAccessToken: !!process.env.TWITTER_ACCESS_TOKEN,
-      hasAccessSecret: !!process.env.TWITTER_ACCESS_SECRET
-    });
-    
     const tweetText = await generateTweetContent();
-    console.log("Generated tweet text:", tweetText);
+    console.log("📝 Generated tweet text:", tweetText);
     
     const response = await twitterClient.v2.tweet(tweetText);
-    console.log("✅ Tweet posted successfully:", response.data);
-    process.exit(0); // Exit successfully after posting
+    console.log("✅ Tweet posted successfully at", new Date().toLocaleString('en-US', { timeZone: 'Europe/Nicosia' }));
+    console.log("📊 Tweet data:", response.data);
   } catch (error) {
     console.error("❌ Error posting tweet:", error);
+    if (error.data) {
+      console.error("Error details:", error.data);
+    }
   }
 }
 
-// --- Schedule daily tweet at 8:00 AM Cyprus time ---
-cron.schedule('0 8 * * *', () => {
-  console.log("⏰ Running scheduled tweet...");
+// --- Schedule tweet for Thursdays at 9:15 AM Cyprus time ---
+// Cron format: minute hour day month day-of-week
+// 15 9 * * 4 = 9:15 AM every Thursday (4 = Thursday, 0 = Sunday)
+cron.schedule('15 9 * * 4', () => {
+  console.log("⏰ Running scheduled tweet for Thursday 9:15 AM...");
   postTweet();
 }, {
   timezone: "Europe/Nicosia"
 });
 
-// Optional: run immediately once to test
-postTweet();
+console.log("🤖 Tweet bot is running...");
+console.log("📅 Scheduled to post every Thursday at 9:15 AM (Cyprus time)");
+console.log("⏰ Current time:", new Date().toLocaleString('en-US', { timeZone: 'Europe/Nicosia' }));
+console.log("🔄 Keep this process running to maintain the schedule");
+console.log("\n💡 To test immediately, uncomment the line: // postTweet();\n");
+
+// ONLY UNCOMMENT THIS LINE TO TEST IMMEDIATELY:
+// postTweet();
