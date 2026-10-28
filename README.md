@@ -1,70 +1,34 @@
-Twitter Auto-Post Bot
+# Twitter Auto-Post
 
-A Node.js bot that automatically posts daily tweets using GitHub Actions. It generates tweets via OpenAI GPT or falls back to pre-written tweets from a local file, ensuring consistent and engaging activity on your Twitter account.
+Posts one technology tip each day using GitHub Actions. Your computer can be off: GitHub runs the bot in the cloud.
 
+## Automatic posting
 
-Features
-Posts one tweet daily at 8:00 AM Cyprus time.
-Uses OpenAI GPT to generate tweets (optional; fallback to pre-written tweets if API limits are reached).
-Supports hashtags to boost engagement.
-Fully automated with GitHub Actions.
-Easy to maintain and update pre-written tweets.
-Robust fallback system guarantees a tweet is always posted.
+1. Open repository Settings → Secrets and variables → Actions.
+2. Add TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, and TWITTER_ACCESS_SECRET as repository secrets.
+3. Give the X developer application Read and Write permission and an API plan that allows posting. Regenerate access tokens after enabling write permission.
+4. Enable GitHub Actions. Keep the workflow on the default branch.
 
-Setup
+The schedule is **08:17 East Africa Time daily** (05:17 UTC), in `.github/workflows/tweet.yml`. You do not have to click Run workflow each day. GitHub can delay jobs; public repositories can have schedules disabled after 60 days without repository activity. Re-enable a disabled schedule in Actions.
 
-1. Clone the Repository
-git clone https://github.com/simakelvinpeter/twitter-auto-post.git
-cd twitter-auto-pos
+OPENAI_API_KEY is optional. Without it, the bot selects a line from tweets.txt. Add one tweet per line, up to 240 characters. Selection changes daily and repeats after the end of the file. AI errors also use this fallback. OPENAI_MODEL can override the default model.
 
+## Check without posting
 
-2. Install Dependencies
-npm install
+Use Node.js 22 or newer:
 
+```sh
+npm ci
+npm test
+npm run dry-run
+```
 
-This installs all required Node.js packages including:
-twitter-api-v2
-openai
-node-cron
-dotenv
+Dry runs never contact X or OpenAI, even with credentials configured. In Actions, Daily tweet → Run workflow defaults to a dry run. Uncheck that option only when you intend to publish a real tweet.
 
-3. Configure Secrets
-Add the following secrets to your GitHub repository:
-Go to Settings → Secrets and Variables → Actions → New repository secret
+`npm start` publishes once and exits. Do not run it alongside the scheduled workflow unless you want another tweet. Both entry points use bot.js.
 
-| Secret Name           | Description                            |
-|----------------------|--------------------------------------|
-| TWITTER_API_KEY       | Twitter API Key                      |
-| TWITTER_API_SECRET    | Twitter API Secret                   |
-| TWITTER_ACCESS_TOKEN  | Twitter Access Token                 |
-| TWITTER_ACCESS_SECRET | Twitter Access Secret                |
-| OPENAI_API_KEY (optional) | OpenAI API Key for AI-generated tweets |
+## Troubleshooting
 
-> ⚠️ Ensure secret names match exactly with no spaces or capitalization changes.
+Check the latest Daily tweet run in Actions. Missing credentials, revoked tokens, insufficient X permissions, quotas, or a disabled workflow require attention. The bot makes one posting attempt and reports failures instead of blindly retrying a request that might already have published.
 
-4. Add Pre-Written Tweets (Optional)
-Create a `tweets.txt` file in the project root. Add one tweet per line, including hashtags if desired:
-Example: Excited about the latest AI trends! #AI #Tech
-This file acts as a fallback if OpenAI cannot generate a tweet.
-
-
-5. GitHub Actions Workflow
-
-The bot is scheduled to run daily at 8:00 AM Cyprus time using the workflow defined in `.github/workflows/tweet-bot.yml`.
-
-Workflow steps:
-
-1. Checkout the repository
-2. Set up Node.js environment
-3. Install dependencies using `npm install`
-4. Run the bot using your GitHub repository secrets
-5. Logs are available in GitHub Actions for monitoring success or errors
-
-You can also trigger the workflow manually via the `workflow_dispatch` event.
-
-Running Locally (Optional)
-
-You can run the bot locally for testing:
-
-```bash
-node postTweet.js
+Never commit .env files or API keys. The test workflow runs without publishing anything.
