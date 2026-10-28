@@ -15,7 +15,6 @@ export async function fallbackTweet(day = new Date()) {
   const content = await readFile(new URL('./tweets.txt', import.meta.url), 'utf8');
   const tweets = content.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   if (tweets.length === 0) throw new Error('tweets.txt needs at least one tweet.');
-  // Rotate daily instead of randomly posting the same fallback repeatedly.
   const dayNumber = Math.floor(day.getTime() / 86400000);
   return validateTweet(tweets[dayNumber % tweets.length]);
 }
