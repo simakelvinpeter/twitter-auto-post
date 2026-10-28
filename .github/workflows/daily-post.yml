@@ -1,4 +1,4 @@
-name: Daily scheduled tweet
+name: Daily automatic tweet
 
 on:
   schedule:
